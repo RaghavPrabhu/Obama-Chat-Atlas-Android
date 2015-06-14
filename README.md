@@ -1,5 +1,9 @@
 <img src="assets/atlas-github-header.png"/>
 
+##<a name="obama_chat"></a>Preview Obama Chat
+
+<img align="right" src="assets/obama_chat.gif" />
+
 ##<a name="overview"></a>Preview Release Overview
 
 <img align="right" src="assets/walkthrough.gif" />
