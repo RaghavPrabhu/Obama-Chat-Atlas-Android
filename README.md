@@ -2,7 +2,7 @@
 
 ##<a name="obama_chat"></a>Preview Obama Chat
 
-<img align="right" src="assets/obama_chat.gif" />
+<img align="right" src="assets/obama_chat.pngq" />
 
 ##<a name="overview"></a>Preview Release Overview
 
