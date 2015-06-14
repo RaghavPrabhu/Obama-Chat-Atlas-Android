@@ -34,4 +34,5 @@ dependencies {
     compile files('src/main/libs/android-support-v4.jar')
     compile files('src/main/libs/zxing-core-3.2.0.jar')
     compile files('src/main/libs/zxing-android-embedded-3.0.0.jar')
+    compile 'com.koushikdutta.ion:ion:2.1.5'
 }

@@ -141,6 +141,10 @@
 
         <service android:name="com.layer.sdk.services.GcmIntentService" />
 
+        <activity
+            android:name=".SwitchModeActivity"
+            android:label="@string/title_activity_switch_mode" >
+        </activity>
     </application>
 
 </manifest>

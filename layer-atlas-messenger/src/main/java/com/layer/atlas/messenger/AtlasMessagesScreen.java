@@ -82,7 +82,8 @@ public class AtlasMessagesScreen extends Activity {
     public static final int REQUEST_CODE_SETTINGS = 101;
     public static final int REQUEST_CODE_GALLERY  = 111;
     public static final int REQUEST_CODE_CAMERA   = 112;
-        
+    private static final int REQUEST_CODE_SWITCH  = 113;
+
     private volatile Conversation conv;
     
     private LocationManager locationManager;
@@ -91,7 +92,9 @@ public class AtlasMessagesScreen extends Activity {
     
     private AtlasMessagesList messagesList;
     private AtlasTypingIndicator typingIndicator;
-    
+    private AtlasMessageComposer messageComposer;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -114,8 +117,14 @@ public class AtlasMessagesScreen extends Activity {
             participantsPicker.setVisibility(View.VISIBLE);
         }
         
-        final AtlasMessageComposer messageComposer = (AtlasMessageComposer) findViewById(R.id.atlas_screen_messages_message_composer);
+        messageComposer = (AtlasMessageComposer) findViewById(R.id.atlas_screen_messages_message_composer);
         messageComposer.init(app.getLayerClient(), conv);
+        messageComposer.setOnClickSwitchButtonListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivityForResult(new Intent(AtlasMessagesScreen.this, SwitchModeActivity.class), REQUEST_CODE_SWITCH);
+            }
+        });
         messageComposer.setListener(new AtlasMessageComposer.Listener() {
             public boolean beforeSend(Message message) {
                 if (conv == null) { // create new one
@@ -254,6 +263,12 @@ public class AtlasMessagesScreen extends Activity {
         final LayerClient layerClient = ((MessengerApp) getApplication()).getLayerClient();
         
         switch (requestCode) {
+            case REQUEST_CODE_SWITCH:
+                if (resultCode == RESULT_OK) {
+                    messageComposer.setMode(data.getIntExtra("mode", -1));
+                    messageComposer.setSwitchButtonResId(data.getIntExtra("resId", R.drawable.man));
+                }
+                break;
             case REQUEST_CODE_CAMERA  :
                 
                 if (photoFile == null) {
