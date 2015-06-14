@@ -18,4 +18,5 @@ dependencies {
     compile(group: 'com.layer.sdk', name: 'layer-sdk', version: "0.13.3") {
         exclude group: "com.android.support"
     }
+    compile 'com.koushikdutta.ion:ion:2.1.5'
 }

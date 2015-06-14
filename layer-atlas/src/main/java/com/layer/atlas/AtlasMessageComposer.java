@@ -32,10 +32,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.ion.Ion;
 import com.layer.sdk.LayerClient;
 import com.layer.sdk.exceptions.LayerException;
 import com.layer.sdk.listeners.LayerTypingIndicatorListener;
@@ -50,23 +54,25 @@ import com.layer.sdk.messaging.MessagePart;
 public class AtlasMessageComposer extends FrameLayout {
     private static final String TAG = AtlasMessageComposer.class.getSimpleName();
     private static final boolean debug = false;
-    
+
     private EditText messageText;
     private View btnSend;
     private View btnUpload;
-    
+
     private Listener listener;
     private Conversation conv;
     private LayerClient layerClient;
-    
-    private ArrayList<MenuItem> menuItems = new ArrayList<MenuItem>(); 
-    
+
+    private ArrayList<MenuItem> menuItems = new ArrayList<MenuItem>();
+
     // styles
     private int textColor;
     private float textSize;
     private Typeface typeFace;
     private int textStyle;
-    
+    private int mCharMode = -1;
+    private OnClickListener mSwitchClickListener;
+
     //
     public AtlasMessageComposer(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
@@ -86,7 +92,7 @@ public class AtlasMessageComposer extends FrameLayout {
         this.textColor = ta.getColor(R.styleable.AtlasMessageComposer_textColor, context.getResources().getColor(R.color.atlas_text_black));
         //this.textSize  = ta.getDimension(R.styleable.AtlasMessageComposer_textSize, context.getResources().getDimension(R.dimen.atlas_text_size_general));
         this.textStyle = ta.getInt(R.styleable.AtlasMessageComposer_textStyle, Typeface.NORMAL);
-        String typeFaceName = ta.getString(R.styleable.AtlasMessageComposer_textTypeface); 
+        String typeFaceName = ta.getString(R.styleable.AtlasMessageComposer_textTypeface);
         this.typeFace  = typeFaceName != null ? Typeface.create(typeFaceName, textStyle) : null;
         ta.recycle();
     }
@@ -143,7 +149,7 @@ public class AtlasMessageComposer extends FrameLayout {
                 popupWindow.showAtLocation(v, Gravity.NO_GRAVITY, viewXYWindow[0], viewXYWindow[1] - menuHeight);
             }
         });
-        
+
         messageText = (EditText) findViewById(R.id.atlas_message_composer_text);
         messageText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -166,38 +172,65 @@ public class AtlasMessageComposer extends FrameLayout {
                 }
             }
         });
-        
+        findViewById(R.id.atlas_message_composer_switch).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mSwitchClickListener != null) {
+                    mSwitchClickListener.onClick(view);
+                }
+            }
+        });
+        Ion.with((ImageView) findViewById(R.id.atlas_message_composer_switch))
+                .load("android.resource://" + getContext().getPackageName() + "/" + R.drawable.man);
         btnSend = findViewById(R.id.atlas_message_composer_send);
         btnSend.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
-                
+
                 String text = messageText.getText().toString();
-                
                 if (text.trim().length() > 0) {
-                    
-                    ArrayList<MessagePart> parts = new ArrayList<MessagePart>();
-                    String[] lines = text.split("\n+");
-                    for (String line : lines) {
-                        parts.add(layerClient.newMessagePart(line));
+                    if (mCharMode == -1) {
+                        sendToLayer(text);
+                    } else {
+                        // TODO query to server
+                        Ion.with(getContext()).load("http://web1.tunnlr.com:12928/chat?q=" + text + "&mode=" + mCharMode)
+                                .asString().setCallback(new FutureCallback<String>() {
+                            @Override
+                            public void onCompleted(Exception e, String result) {
+                                if (e != null) {
+                                    Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                                    return;
+                                }
+                                sendToLayer(result);
+                            }
+                        });
+
                     }
-                    Message msg = layerClient.newMessage(parts);
-                    
-                    if (listener != null) {
-                        boolean proceed = listener.beforeSend(msg);
-                        if (!proceed) return;
-                    } else if (conv == null) {
-                        Log.e(TAG, "Cannot send message. Conversation is not set");
-                    }
-                    if (conv == null) return;
-                    
-                    conv.send(msg);
-                    messageText.setText("");
                 }
             }
         });
         applyStyle();
     }
-    
+
+    private void sendToLayer(String text) {
+        ArrayList<MessagePart> parts = new ArrayList<MessagePart>();
+        String[] lines = text.split("\n+");
+        for (String line : lines) {
+            parts.add(layerClient.newMessagePart(line));
+        }
+        Message msg = layerClient.newMessage(parts);
+
+        if (listener != null) {
+            boolean proceed = listener.beforeSend(msg);
+            if (!proceed) return;
+        } else if (conv == null) {
+            Log.e(TAG, "Cannot send message. Conversation is not set");
+        }
+        if (conv == null) return;
+
+        conv.send(msg);
+        messageText.setText("");
+    }
+
     private void applyStyle() {
         //messageText.setTextSize(textSize);
         messageText.setTypeface(typeFace, textStyle);
@@ -225,6 +258,10 @@ public class AtlasMessageComposer extends FrameLayout {
         this.conv = conv;
     }
 
+    public void setMode(int mode) {
+        mCharMode = mode;
+    }
+
     public interface Listener {
         boolean beforeSend(Message message);
     }
@@ -232,5 +269,14 @@ public class AtlasMessageComposer extends FrameLayout {
     private static class MenuItem {
         String title;
         OnClickListener clickListener;
+    }
+
+    public void setSwitchButtonResId(int resId) {
+        Ion.with((ImageView) findViewById(R.id.atlas_message_composer_switch))
+                .load("android.resource://" + getContext().getPackageName() + "/" + resId);
+    }
+
+    public void setOnClickSwitchButtonListener(OnClickListener listener) {
+        mSwitchClickListener = listener;
     }
 }

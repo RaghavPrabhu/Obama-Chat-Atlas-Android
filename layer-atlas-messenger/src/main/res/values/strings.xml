@@ -19,5 +19,9 @@
     <string name="atlas_screen_settings_title">Settings</string>
     <string name="atlas_screen_messages_title">New Message</string>
     <string name="atlas_screen_qr_prompt">Scan Layer Atlas QR Code</string>
+    <string name="title_activity_switch_mode">SwitchModeActivity</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
 
 </resources>
